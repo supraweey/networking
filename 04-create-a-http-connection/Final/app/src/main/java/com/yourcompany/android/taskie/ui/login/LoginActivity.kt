@@ -81,10 +81,12 @@ class LoginActivity : AppCompatActivity() {
 
   private fun logUserIn(userDataRequest: UserDataRequest) {
     remoteApi.loginUser(userDataRequest) { token: String?, throwable: Throwable? ->
-      if (token != null && token.isNotBlank()) {
-        onLoginSuccess(token)
-      } else if (throwable != null) {
-        showLoginError()
+      runOnUiThread{
+        if (token != null && token.isNotBlank()) {
+          onLoginSuccess(token)
+        } else if (throwable != null) {
+          showLoginError()
+        }
       }
     }
   }

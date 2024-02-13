@@ -37,11 +37,13 @@
 package com.yourcompany.android.taskie.ui.login
 
 import android.content.Intent
+import android.net.ConnectivityManager
 import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
 import com.yourcompany.android.taskie.App
 import com.yourcompany.android.taskie.databinding.ActivityLoginBinding
 import com.yourcompany.android.taskie.model.request.UserDataRequest
+import com.yourcompany.android.taskie.networking.NetworkStatusChecker
 import com.yourcompany.android.taskie.networking.RemoteApi
 import com.yourcompany.android.taskie.ui.main.MainActivity
 import com.yourcompany.android.taskie.ui.register.RegisterActivity
@@ -54,6 +56,10 @@ import com.yourcompany.android.taskie.utils.visible
 class LoginActivity : AppCompatActivity() {
 
   private val remoteApi = RemoteApi()
+
+  private val networkStatusChecker by lazy {
+    NetworkStatusChecker(getSystemService(ConnectivityManager::class.java))
+  }
 
   private lateinit var binding: ActivityLoginBinding
 
@@ -80,11 +86,13 @@ class LoginActivity : AppCompatActivity() {
   }
 
   private fun logUserIn(userDataRequest: UserDataRequest) {
-    remoteApi.loginUser(userDataRequest) { token: String?, throwable: Throwable? ->
-      if (token != null && token.isNotBlank()) {
-        onLoginSuccess(token)
-      } else if (throwable != null) {
-        showLoginError()
+    networkStatusChecker.performIfConnectionToInternet {
+      remoteApi.loginUser(userDataRequest) { token: String?, throwable: Throwable? ->
+        if (token != null && token.isNotBlank()) {
+          onLoginSuccess(token)
+        } else if (throwable != null) {
+          showLoginError()
+        }
       }
     }
   }

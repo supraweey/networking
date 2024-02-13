@@ -36,10 +36,12 @@
 
 package com.yourcompany.android.taskie.ui.register
 
+import android.net.ConnectivityManager
 import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
 import com.yourcompany.android.taskie.databinding.ActivityRegisterBinding
 import com.yourcompany.android.taskie.model.request.UserDataRequest
+import com.yourcompany.android.taskie.networking.NetworkStatusChecker
 import com.yourcompany.android.taskie.networking.RemoteApi
 import com.yourcompany.android.taskie.utils.gone
 import com.yourcompany.android.taskie.utils.toast
@@ -49,6 +51,10 @@ import com.yourcompany.android.taskie.utils.visible
  * Displays the Register screen, with the options to register, or head over to Login!
  */
 class RegisterActivity : AppCompatActivity() {
+
+  private val networkStatusChecker by lazy {
+    NetworkStatusChecker(getSystemService(ConnectivityManager::class.java))
+  }
 
   private val remoteApi = RemoteApi()
 
@@ -71,12 +77,16 @@ class RegisterActivity : AppCompatActivity() {
 
   private fun processData(username: String, email: String, password: String) {
     if (username.isNotBlank() && email.isNotBlank() && password.isNotBlank()) {
-      remoteApi.registerUser(UserDataRequest(email, password, username)) { message, error ->
-        if (message != null) {
-          toast(message)
-          onRegisterSuccess()
-        } else if (error != null) {
-          onRegisterError()
+      networkStatusChecker.performIfConnectionToInternet {
+        remoteApi.registerUser(UserDataRequest(email, password, username)) { message, error ->
+          runOnUiThread{
+            if (message != null) {
+              toast(message)
+              onRegisterSuccess()
+            } else if (error != null) {
+              onRegisterError()
+            }
+          }
         }
       }
     } else {
