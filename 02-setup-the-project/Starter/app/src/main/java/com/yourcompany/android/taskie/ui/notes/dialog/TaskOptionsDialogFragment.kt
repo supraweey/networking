@@ -42,6 +42,7 @@ import android.view.View
 import android.view.ViewGroup
 import android.view.WindowManager
 import androidx.fragment.app.DialogFragment
+import com.yourcompany.android.taskie.App
 import com.yourcompany.android.taskie.R
 import com.yourcompany.android.taskie.databinding.FragmentDialogTaskOptionsBinding
 import com.yourcompany.android.taskie.networking.RemoteApi
@@ -53,7 +54,7 @@ class TaskOptionsDialogFragment : DialogFragment() {
 
   private var taskOptionSelectedListener: TaskOptionSelectedListener? = null
 
-  private val remoteApi = RemoteApi()
+  private val remoteApi = App.remoteApi
 
   // This property is only valid between onCreateView and
   // onDestroyView and it is used to inflate and destroy the view

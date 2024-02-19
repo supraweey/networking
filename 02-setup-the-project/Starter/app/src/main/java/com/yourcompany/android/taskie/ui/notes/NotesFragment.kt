@@ -42,6 +42,7 @@ import android.view.View
 import android.view.ViewGroup
 import androidx.fragment.app.Fragment
 import androidx.recyclerview.widget.LinearLayoutManager
+import com.yourcompany.android.taskie.App
 import com.yourcompany.android.taskie.databinding.FragmentNotesBinding
 import com.yourcompany.android.taskie.model.Task
 import com.yourcompany.android.taskie.networking.RemoteApi
@@ -58,7 +59,7 @@ class NotesFragment : Fragment(), AddTaskDialogFragment.TaskAddedListener,
     TaskOptionsDialogFragment.TaskOptionSelectedListener {
 
   private val adapter by lazy { TaskAdapter(::onItemSelected) }
-  private val remoteApi = RemoteApi()
+  private val remoteApi = App.remoteApi
 
   // This property is only valid between onCreateView and
   // onDestroyView and it is used to inflate and destroy the view

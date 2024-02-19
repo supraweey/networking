@@ -53,7 +53,7 @@ import com.yourcompany.android.taskie.ui.login.LoginActivity
  */
 class ProfileFragment : Fragment() {
 
-  private val remoteApi = RemoteApi()
+  private val remoteApi = App.remoteApi
 
   // This property is only valid between onCreateView and
   // onDestroyView and it is used to inflate and destroy the view

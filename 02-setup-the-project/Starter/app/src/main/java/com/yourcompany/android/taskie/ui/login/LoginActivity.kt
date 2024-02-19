@@ -55,7 +55,7 @@ import com.yourcompany.android.taskie.utils.visible
  */
 class LoginActivity : AppCompatActivity() {
 
-  private val remoteApi = RemoteApi()
+  private val remoteApi = App.remoteApi
   private val networkStatusChecker: NetworkStatusChecker by lazy { NetworkStatusChecker(getSystemService(ConnectivityManager::class.java)) }
 
   private lateinit var binding: ActivityLoginBinding

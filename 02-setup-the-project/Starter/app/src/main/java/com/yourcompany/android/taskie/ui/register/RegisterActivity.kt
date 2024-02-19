@@ -39,6 +39,7 @@ package com.yourcompany.android.taskie.ui.register
 import android.net.ConnectivityManager
 import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
+import com.yourcompany.android.taskie.App
 import com.yourcompany.android.taskie.databinding.ActivityRegisterBinding
 import com.yourcompany.android.taskie.model.request.UserDataRequest
 import com.yourcompany.android.taskie.networking.NetworkStatusChecker
@@ -56,7 +57,7 @@ class RegisterActivity : AppCompatActivity() {
     NetworkStatusChecker(getSystemService(ConnectivityManager::class.java))
   }
 
-  private val remoteApi = RemoteApi()
+  private val remoteApi = App.remoteApi
 
   private lateinit var binding: ActivityRegisterBinding
 
@@ -79,14 +80,12 @@ class RegisterActivity : AppCompatActivity() {
     if (username.isNotBlank() && email.isNotBlank() && password.isNotBlank()) {
       networkStatusChecker.performIfConnectedToInternet {
         remoteApi.registerUser(UserDataRequest(email, password, username)) { message, error ->
-          runOnUiThread{
             if (message != null) {
               toast(message)
               onRegisterSuccess()
             } else if (error != null) {
               onRegisterError()
             }
-          }
         }
       }
 

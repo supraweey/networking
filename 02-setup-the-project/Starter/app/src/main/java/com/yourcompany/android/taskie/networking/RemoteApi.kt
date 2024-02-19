@@ -36,10 +36,19 @@
 
 package com.yourcompany.android.taskie.networking
 
+import com.google.gson.Gson
+import com.yourcompany.android.taskie.App
 import com.yourcompany.android.taskie.model.Task
 import com.yourcompany.android.taskie.model.UserProfile
 import com.yourcompany.android.taskie.model.request.AddTaskRequest
 import com.yourcompany.android.taskie.model.request.UserDataRequest
+import com.yourcompany.android.taskie.model.response.GetTasksResponse
+import okhttp3.Callback
+import okhttp3.MediaType
+import okhttp3.RequestBody
+import okhttp3.ResponseBody
+import retrofit2.Call
+import retrofit2.Response
 import java.io.BufferedReader
 import java.io.InputStreamReader
 import java.net.HttpURLConnection
@@ -51,71 +60,58 @@ import java.net.URL
 
 const val BASE_URL = "https://taskie-rw.herokuapp.com"
 
-class RemoteApi {
+class RemoteApi(private val remoteApiService: RemoteApiService) {
+
+    private val gson = Gson()
 
   fun loginUser(userDataRequest: UserDataRequest, onUserLoggedIn: (String?, Throwable?) -> Unit) {
     onUserLoggedIn("token", null)
   }
 
   fun registerUser(userDataRequest: UserDataRequest, onUserCreated: (String?, Throwable?) -> Unit) {
-    Thread(Runnable {
-        val connection = URL("$BASE_URL/api/register").openConnection() as HttpURLConnection
-        connection.requestMethod = "POST"
-        connection.setRequestProperty("Content-Type", "application/json")
-        connection.setRequestProperty("Accept", "application/json")
-        connection.readTimeout = 10000
-        connection.connectTimeout = 10000
-        connection.doOutput = true
-        connection.doInput = true
+      val body = RequestBody.create(
+          MediaType.parse("application/json"), gson.toJson(userDataRequest)
+      )
 
-        val body = "{\"name\":\"${userDataRequest.name}\",\"email\":\"${userDataRequest.email}\"," +
-                "\"password\":\"${userDataRequest.password}\"}"
+      remoteApiService.registerUser(body).enqueue(object : retrofit2.Callback<ResponseBody> {
+          override fun onFailure(call: Call<ResponseBody>, error: Throwable) {
+              onUserCreated(null, error)
+          }
 
-        val bytes = body.toByteArray()
+          override fun onResponse(call: Call<ResponseBody>, response: Response<ResponseBody>) {
+              val message = response.body()?.string()
+              if (message == null) onUserCreated(null, NullPointerException("No response body!"))
 
-        try {
-            connection.outputStream.use { outputStream ->
-                outputStream.write(bytes)
-            }
+              onUserCreated(message, null)
+          }
+      })
 
-            val reader = InputStreamReader(connection.inputStream)
 
-            reader.use { input ->
-                val response = StringBuilder()
-                val bufferReader = BufferedReader(input)
-
-                bufferReader.useLines {lines ->
-                    lines.forEach {
-                        response.append(it.trim())
-                    }
-                }
-
-                onUserCreated(response.toString(), null)
-            }
-        }
-        catch (error: Throwable){
-            onUserCreated(null, error)
-        }
-
-        connection.disconnect()
-    }).start()
   }
 
   fun getTasks(onTasksReceived: (List<Task>, Throwable?) -> Unit) {
-    onTasksReceived(listOf(
-        Task("id",
-            "Wash laundry",
-            "Wash the whites and colored separately!",
-            false,
-            1
-        ),
-        Task("id2",
-            "Do some work",
-            "Finish the project",
-            false,
-            3
-        )
-    ), null)
+    remoteApiService.getNotes(App.getToken()).enqueue(object : retrofit2.Callback<ResponseBody?> {
+        override fun onResponse(call: Call<ResponseBody?>, response: Response<ResponseBody?>) {
+            val jsonBody = response.body()?.string()
+
+            if(jsonBody == null){
+                onTasksReceived(emptyList(), NullPointerException("No data available"))
+                return
+            }
+
+            val data = gson.fromJson(jsonBody, GetTasksResponse::class.java)
+
+            if (data != null && data.notes.isNotEmpty()) {
+                onTasksReceived(data.notes.filter { !it.isCompleted }, null)
+            } else {
+                onTasksReceived(emptyList(), NullPointerException("No data available!"))
+            }
+        }
+
+        override fun onFailure(call: Call<ResponseBody?>, error: Throwable) {
+            onTasksReceived(emptyList(), error)
+        }
+    })
   }
 
   fun deleteTask(onTaskDeleted: (Throwable?) -> Unit) {

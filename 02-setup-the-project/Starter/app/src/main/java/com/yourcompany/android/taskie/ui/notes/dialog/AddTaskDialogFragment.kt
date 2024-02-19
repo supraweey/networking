@@ -44,6 +44,7 @@ import android.view.ViewGroup
 import android.view.WindowManager
 import android.widget.ArrayAdapter
 import androidx.fragment.app.DialogFragment
+import com.yourcompany.android.taskie.App
 import com.yourcompany.android.taskie.R
 import com.yourcompany.android.taskie.databinding.FragmentDialogNewTaskBinding
 import com.yourcompany.android.taskie.model.PriorityColor
@@ -58,7 +59,7 @@ import com.yourcompany.android.taskie.utils.toast
 class AddTaskDialogFragment : DialogFragment() {
 
   private var taskAddedListener: TaskAddedListener? = null
-  private val remoteApi = RemoteApi()
+  private val remoteApi = App.remoteApi
 
   // This property is only valid between onCreateView and
   // onDestroyView and it is used to inflate and destroy the view
